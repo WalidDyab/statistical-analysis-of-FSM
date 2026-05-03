@@ -229,8 +229,8 @@ h1{
   <a href="index.html" class="nav-brand">FSM Statistics</a>
   <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle Navigation">☰</button>
   <div class="nav-links" id="navLinks">
-    <a href="problem.html" class="nav-link">Problem</a>
-    <a href="lesson.html" class="nav-link">Lesson</a>
+    <a href="problem.html" class="nav-link">The Locker Machine</a>
+    <a href="lesson.html" class="nav-link">Statistical Analysis</a>
     <a href="demo.html" class="nav-link">Interactive Demo</a>
     <a href="visual.html" class="nav-link">Visual Summary</a>
     <a href="quiz.html" class="nav-link">Quiz</a>
@@ -266,7 +266,8 @@ h1{
   <div class="figure-box">
     <img src="fsm-original-schematic.png" alt="Original found FSM circuit schematic cropped from the reference PDF." />
     <p class="caption">
-      Original schematic reference: found FSM circuit. This is intentionally shown as the exact source figure, not a redrawn approximation.
+      D. M. Harris and S. L. Harris, *Digital Design and Computer Architecture: RISC-V Edition*. 
+Cambridge, MA, USA: Morgan Kaufmann, 2021.
     </p>
   </div>
 
@@ -291,26 +292,32 @@ h1{
       <b>4. Assign symbolic states</b>
       The reduced machine is interpreted using symbolic states such as \(S0\), \(S1\), and \(S2\).
     </div>
-
+	
     <div class="step">
-      <b>5. Bridge to probability</b>
+      <b>5. Draw the state transition diagram</b>
+      From the diagram we can deduce what the machine is doing (reverse engineering). The Unlock output goes high only when the input is "3" followed by "1".
+    </div>
+	
+    <div class="step">
+      <b>6. Bridge to probability</b>
       Once the valid unlock behavior is known, random attempts become a statistical process:
       <div class="eq">\[ X = \text{number of attempts until unlock} \]</div>
     </div>
   </div>
 </section>
 
-<div class="warning">
-  The schematic is kept as the original image to avoid introducing wiring or gate-level errors in a redrawn version.
-</div>
-
 <div class="takeaway">
   FSM analysis gives the deterministic behavior. Probability and statistics analyze uncertainty in the attempts.
 </div>
 
+<footer style="margin-top:40px; padding:15px; text-align:center; font-size:14px; color:#555; border-top:1px solid #ddd;">
+  <p><strong>EE 322 – Microprocessor Design | Electrical Engineering Program</strong></p>
+  <p>Dr. Walid Dyab | Communications and Networks Engineering Department wdyab@psu.edu.sa</p>
+  <p>College of Engineering, Prince Sultan University, Riyadh, KSA</p>
+  <p>© 2026 All Rights Reserved</p>
+</footer>
 
 
-<p class="footer">Problem reference page for the FSM Brute Force Statistics mini-project.</p>
 </div>
 </body>
 </html>
