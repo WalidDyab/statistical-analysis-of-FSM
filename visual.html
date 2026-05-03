@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Visual Summary | FSM Brute Force Statistics</title>
+<style>
+:root{
+  --bg:#f7f9fc;
+  --card:#fff;
+  --ink:#1f2937;
+  --muted:#64748b;
+  --blue:#2563eb;
+  --blue-soft:#dbeafe;
+  --green:#16a34a;
+  --green-soft:#dcfce7;
+  --amber:#d97706;
+  --amber-soft:#fef3c7;
+  --border:#e5e7eb;
+  --shadow:0 12px 28px rgba(15,23,42,.08)
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:linear-gradient(180deg,#eef5ff 0%,var(--bg) 280px);
+  color:var(--ink);
+  line-height:1.65
+}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 20px 50px}
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-brand {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #0f172a;
+  text-decoration: none;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.nav-link {
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.nav-link:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+.hamburger {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    flex-direction: column;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  }
+  .nav-links.active {
+    display: flex;
+  }
+  .nav-link {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.5rem;
+  }
+  .hamburger {
+    display: block;
+  }
+}
+header{text-align:center;margin-bottom:24px}
+.tag{
+  display:inline-block;
+  background:var(--blue-soft);
+  color:var(--blue);
+  padding:7px 13px;
+  border-radius:999px;
+  font-weight:800
+}
+h1{
+  font-size:clamp(2rem,5vw,3.6rem);
+  line-height:1.08;
+  margin:14px 0 12px;
+  letter-spacing:-.04em
+}
+.subtitle{
+  max-width:850px;
+  margin:auto;
+  color:var(--muted);
+  font-size:1.12rem
+}
+.visual-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  padding:16px;
+  margin:28px auto 24px
+}
+.visual-card img{
+  width:100%;
+  display:block;
+  border-radius:18px;
+  border:1px solid var(--border)
+}
+.caption{
+  margin:16px 8px 6px;
+  color:var(--muted);
+  text-align:center;
+  font-size:1rem
+}
+.caption strong{color:var(--ink)}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:22px
+}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+.box{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 8px 18px rgba(15,23,42,.05)
+}
+.box b{display:block;color:var(--blue);margin-bottom:5px}
+.takeaway{
+  background:var(--green-soft);
+  border-left:5px solid var(--green);
+  border-radius:16px;
+  padding:18px;
+  margin-top:22px;
+  font-weight:750
+}
+.engineering{
+  background:var(--amber-soft);
+  border-left:5px solid var(--amber);
+  border-radius:16px;
+  padding:18px;
+  margin-top:16px
+}
+.footer{
+  color:var(--muted);
+  text-align:center;
+  margin-top:28px;
+  font-size:.95rem
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">FSM Statistics</a>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle Navigation">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="problem.html" class="nav-link">Problem</a>
+    <a href="lesson.html" class="nav-link">Lesson</a>
+    <a href="demo.html" class="nav-link">Interactive Demo</a>
+    <a href="visual.html" class="nav-link">Visual Summary</a>
+    <a href="quiz.html" class="nav-link">Quiz</a>
+  </div>
+</nav>
+
+<script>
+  function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+  }
+
+  document.addEventListener('click', function(event) {
+    const nav = document.querySelector('.navbar');
+    const navLinks = document.getElementById('navLinks');
+    if (nav && navLinks && !nav.contains(event.target) && navLinks.classList.contains('active')) {
+      navLinks.classList.remove('active');
+    }
+  });
+</script>
+
+<header>
+  <span class="tag">Visual Summary</span>
+  <h1>Memoryless vs Learning Search Strategies</h1>
+  <p class="subtitle">
+    This sketch compares two statistical models for brute-force attempts on an FSM lock:
+    random repeated attempts and systematic non-repeated attempts.
+  </p>
+</header>
+
+<section class="visual-card">
+  <img src="fsm-intruder-comparison.png" alt="Pencil sketch infographic comparing memoryless random guessing and learning systematic guessing for an FSM lock." />
+  <p class="caption">
+    <strong>A picture worth 1000 words:</strong>
+    the same lock can lead to different probability models depending on whether the search process has memory.
+  </p>
+</section>
+
+<section class="grid">
+  <div class="box">
+    <b>Case 1: Memoryless search</b>
+    Guesses may repeat. The probability of success on each attempt remains constant, so the waiting time follows a geometric distribution.
+  </div>
+  <div class="box">
+    <b>Case 2: Learning search</b>
+    Failed guesses are removed. The probability of success on the next attempt increases, but the first-success position is uniform from 1 to N.
+  </div>
+  <div class="box">
+    <b>Engineering perspective</b>
+    A good design considers the full distribution, expected number of attempts, repeated-waste efficiency, and protections such as delays or lockouts.
+  </div>
+</section>
+
+<div class="takeaway">
+  Key idea: learning changes the probability of the next attempt, but engineering analysis also asks about the overall distribution of the first success.
+</div>
+
+
+
+<p class="footer">Part of the FSM Brute Force Statistics mini-project.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interactive Demo | FSM Statistics</title>
+<style>
+:root{
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --ink:#1f2937;
+  --muted:#64748b;
+  --blue:#2563eb;
+  --blue-soft:#dbeafe;
+  --green:#16a34a;
+  --green-soft:#dcfce7;
+  --red:#dc2626;
+  --red-soft:#fee2e2;
+  --amber:#d97706;
+  --amber-soft:#fef3c7;
+  --border:#e5e7eb;
+  --shadow:0 12px 28px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:linear-gradient(180deg,#eef5ff 0%,var(--bg) 280px);
+  color:var(--ink);
+  line-height:1.6;
+}
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-brand {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #0f172a;
+  text-decoration: none;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.nav-link {
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.nav-link:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+.hamburger {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    flex-direction: column;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  }
+  .nav-links.active {
+    display: flex;
+  }
+  .nav-link {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.5rem;
+  }
+  .hamburger {
+    display: block;
+  }
+}
+header,main{
+  max-width:1200px;
+  margin:0 auto;
+  padding:28px 20px;
+}
+header{text-align:center;padding-top:44px}
+.tag{
+  display:inline-block;
+  background:var(--blue-soft);
+  color:var(--blue);
+  padding:7px 13px;
+  border-radius:999px;
+  font-weight:800
+}
+h1{
+  font-size:clamp(2rem,4vw,3.45rem);
+  line-height:1.08;
+  margin:14px 0 10px;
+  letter-spacing:-.035em
+}
+.subtitle{
+  max-width:840px;
+  margin:auto;
+  color:var(--muted);
+  font-size:1.1rem
+}
+.layout{
+  display:grid;
+  grid-template-columns:410px 1fr;
+  gap:20px;
+  align-items:start
+}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr}
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:20px
+}
+.sticky-panel{
+  position:sticky;
+  top:74px
+}
+@media(max-width:980px){
+  .sticky-panel{position:static}
+}
+h2{margin:0 0 12px;font-size:1.55rem;line-height:1.2}
+h3{margin:16px 0 8px;font-size:1.1rem}
+.small{color:var(--muted);font-size:.96rem}
+.control{
+  background:#fbfdff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin:12px 0
+}
+label{font-weight:850}
+input[type=range]{
+  width:100%;
+  margin-top:10px
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:14px
+}
+.metric{
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  text-align:center
+}
+.metric strong{
+  display:block;
+  color:var(--blue);
+  font-size:1.65rem;
+  line-height:1.15;
+  margin-top:4px
+}
+.legend{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:12px 0 8px
+}
+.legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--muted);
+  font-weight:700;
+  font-size:.92rem
+}
+.dot{
+  width:14px;
+  height:14px;
+  border-radius:5px;
+  border:2px solid var(--border);
+  display:inline-block
+}
+.dot.red{background:var(--red-soft);border-color:#fecaca}
+.dot.blue{background:var(--blue-soft);border-color:#93c5fd}
+.dot.gray{background:#f8fafc;border-color:#cbd5e1}
+.seq{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+  background:#fbfdff;
+  border:1px dashed #cbd5e1;
+  border-radius:18px;
+  padding:14px;
+  max-height:245px;
+  overflow:auto
+}
+.box{
+  width:50px;
+  height:50px;
+  border-radius:14px;
+  border:2px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  background:#fff;
+  transition:transform .18s ease, background .18s ease
+}
+.box.fail{background:var(--red-soft);border-color:#fecaca;color:var(--red)}
+.box.future{background:#f8fafc;color:#94a3b8}
+.box.next{
+  background:var(--blue-soft);
+  border-color:#93c5fd;
+  color:#1d4ed8;
+  transform:scale(1.08)
+}
+.note{
+  background:var(--amber-soft);
+  border-left:5px solid var(--amber);
+  border-radius:14px;
+  padding:14px 16px;
+  margin:16px 0
+}
+.takeaway{
+  background:var(--green-soft);
+  border-left:5px solid var(--green);
+  border-radius:14px;
+  padding:16px;
+  margin-top:16px;
+  font-weight:800
+}
+.eq{
+  text-align:center;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  border-radius:14px;
+  padding:12px;
+  overflow-x:auto;
+  font-size:1.05rem;
+  margin:12px 0
+}
+.compare-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px
+}
+@media(max-width:780px){.compare-grid{grid-template-columns:1fr}}
+.canvasWrap{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:10px;
+  margin-top:12px
+}
+canvas{width:100%;height:255px;display:block}
+.prob-card{
+  border-top:6px solid var(--blue)
+}
+.prob-card.uniform{
+  border-top-color:var(--green)
+}
+.summary-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px
+}
+@media(max-width:780px){.summary-row{grid-template-columns:1fr}}
+.summary-box{
+  background:#fbfdff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px
+}
+.summary-box b{color:var(--blue)}
+.footer-note{
+  text-align:center;
+  color:var(--muted);
+  font-size:.95rem;
+  margin:24px 0 8px
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">FSM Statistics</a>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle Navigation">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="problem.html" class="nav-link">Problem</a>
+    <a href="lesson.html" class="nav-link">Lesson</a>
+    <a href="demo.html" class="nav-link">Interactive Demo</a>
+    <a href="visual.html" class="nav-link">Visual Summary</a>
+    <a href="quiz.html" class="nav-link">Quiz</a>
+  </div>
+</nav>
+
+<script>
+  function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+  }
+
+  document.addEventListener('click', function(event) {
+    const nav = document.querySelector('.navbar');
+    const navLinks = document.getElementById('navLinks');
+    if (nav && navLinks && !nav.contains(event.target) && navLinks.classList.contains('active')) {
+      navLinks.classList.remove('active');
+    }
+  });
+</script>
+
+<header>
+  <span class="tag">Interactive Demo</span>
+  <h1>Learning Search: Why One Probability Increases While the Other Stays Flat</h1>
+  <p class="subtitle">
+    Move the sliders and watch the live attempt boxes immediately. This page separates the
+    <strong>local probability of success on the next attempt</strong> from the
+    <strong>overall distribution of the first success position</strong>.
+  </p>
+</header>
+
+<main>
+  <div class="layout">
+
+    <aside class="sticky-panel">
+      <section class="card">
+        <h2>Control the search process</h2>
+
+        <div class="control">
+          <label for="N">Total possible combinations, N: <span id="NLabel">10</span></label>
+          <input id="N" type="range" min="3" max="30" value="10">
+          <p class="small">Think of N as the size of the search space.</p>
+        </div>
+
+        <div class="control">
+          <label for="r">Failed attempts already remembered, r: <span id="rLabel">0</span></label>
+          <input id="r" type="range" min="0" max="9" value="0">
+          <p class="small">The learning search does not repeat these failed guesses.</p>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            Next attempt
+            <strong id="nextProb">1/10</strong>
+            <span id="nextPercent" class="small">10.00%</span>
+          </div>
+          <div class="metric">
+            Exact position
+            <strong id="posProb">1/10</strong>
+            <span id="posPercent" class="small">10.00%</span>
+          </div>
+        </div>
+
+        <h3>Live attempt sequence</h3>
+        <div class="legend">
+          <span><i class="dot red"></i> failed/removed</span>
+          <span><i class="dot blue"></i> next guess</span>
+          <span><i class="dot gray"></i> untried</span>
+        </div>
+        <div class="seq" id="seq"></div>
+
+        <div class="takeaway">
+          As r increases, the next-attempt probability increases because fewer choices remain.
+        </div>
+      </section>
+    </aside>
+
+    <section>
+      <div class="compare-grid">
+        <article class="card prob-card">
+          <h2>1. Local view: next attempt</h2>
+          <p>
+            After <strong id="rText">0</strong> failed guesses, those wrong combinations are removed.
+            The next guess is selected from the remaining combinations.
+          </p>
+          <div class="eq">P(success next | r failures) = 1 / (N − r)</div>
+          <div class="canvasWrap">
+            <canvas id="nextCanvas" width="520" height="300"></canvas>
+          </div>
+          <div class="note">
+            This probability increases during the process because the search has memory.
+          </div>
+        </article>
+
+        <article class="card prob-card uniform">
+          <h2>2. Overall view: first success position</h2>
+          <p>
+            Before the search starts, the correct combination is equally likely to be in any position
+            of the non-repeated guessing order.
+          </p>
+          <div class="eq">P(X = k) = 1 / N, &nbsp; k = 1, 2, ..., N</div>
+          <div class="canvasWrap">
+            <canvas id="uniformCanvas" width="520" height="300"></canvas>
+          </div>
+          <div class="note">
+            This distribution stays flat: position 1, 2, 3, ..., N are equally likely.
+          </div>
+        </article>
+      </div>
+
+      <section class="card">
+        <h2>Which probability matters in engineering analysis?</h2>
+        <div class="summary-row">
+          <div class="summary-box">
+            <h3>Local / operational question</h3>
+            <p><b>“Given what has already happened, what is the chance of success now?”</b></p>
+            <div class="eq">P(success next | r failures) = 1 / (N − r)</div>
+            <p class="small">Useful while the process is running.</p>
+          </div>
+
+          <div class="summary-box">
+            <h3>Global / design question</h3>
+            <p><b>“Before we start, where is the first success likely to occur?”</b></p>
+            <div class="eq">P(X = k) = 1 / N</div>
+            <p class="small">Useful for comparing designs, expected effort, and risk.</p>
+          </div>
+        </div>
+
+        <div class="takeaway">
+          One tells you what happens next. The other tells you what happens overall.
+          Engineering analysis usually needs the overall distribution because it helps compare designs before the process happens.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Interpretation</h2>
+        <p>
+          Learning does not move the correct combination to a different position in the original random order.
+          It only avoids wasting attempts on repeated wrong guesses.
+        </p>
+        <div class="summary-row">
+          <div class="summary-box">
+            <h3>With memory</h3>
+            <p>No repeated guesses. The expected attempt number is:</p>
+            <div class="eq">E[X] = (N + 1) / 2</div>
+          </div>
+          <div class="summary-box">
+            <h3>Without memory</h3>
+            <p>Repeated guesses are possible. For random guessing with replacement:</p>
+            <div class="eq">E[X] = N</div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <p class="footer-note">Part of the FSM Brute Force Statistics mini-project.</p>
+</main>
+
+<script>
+const NInput = document.getElementById("N");
+const rInput = document.getElementById("r");
+const NLabel = document.getElementById("NLabel");
+const rLabel = document.getElementById("rLabel");
+const rText = document.getElementById("rText");
+const nextProb = document.getElementById("nextProb");
+const nextPercent = document.getElementById("nextPercent");
+const posProb = document.getElementById("posProb");
+const posPercent = document.getElementById("posPercent");
+const seq = document.getElementById("seq");
+
+const nextCanvas = document.getElementById("nextCanvas");
+const nextCtx = nextCanvas.getContext("2d");
+const uniformCanvas = document.getElementById("uniformCanvas");
+const uniformCtx = uniformCanvas.getContext("2d");
+
+function frac(num, den){ return num + "/" + den; }
+function percent(x){ return (100*x).toFixed(2) + "%"; }
+
+function drawAxes(ctx,W,H,padL,padR,padT,padB,title,xLabel){
+  ctx.strokeStyle="#cbd5e1";
+  ctx.lineWidth=1.4;
+  ctx.beginPath();
+  ctx.moveTo(padL,padT);
+  ctx.lineTo(padL,H-padB);
+  ctx.lineTo(W-padR,H-padB);
+  ctx.stroke();
+
+  ctx.fillStyle="#334155";
+  ctx.font="bold 15px Segoe UI, Arial";
+  ctx.fillText(title,padL,18);
+  ctx.font="13px Segoe UI, Arial";
+  ctx.fillText(xLabel,W/2-40,H-12);
+  ctx.fillText("Probability",8,padT+12);
+}
+
+function drawNext(N,r){
+  const ctx = nextCtx, W = nextCanvas.width, H = nextCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  const padL=52,padR=20,padT=26,padB=45;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const vals=[];
+  for(let i=0;i<N;i++) vals.push(1/(N-i));
+
+  drawAxes(ctx,W,H,padL,padR,padT,padB,"Next-attempt probability after r failures","r");
+
+  const barW = Math.max(3, plotW/N*0.72);
+  for(let i=0;i<N;i++){
+    const x=padL+i*(plotW/N);
+    const h=vals[i]*plotH;
+    ctx.fillStyle = i===r ? "#2563eb" : (i<r ? "#fca5a5" : "#cbd5e1");
+    ctx.fillRect(x,H-padB-h,barW,h);
+  }
+  ctx.fillStyle="#475569";
+  ctx.font="13px Segoe UI, Arial";
+  ctx.fillText("0",padL-4,H-padB+20);
+  ctx.fillText(String(N-1),W-padR-25,H-padB+20);
+}
+
+function drawUniform(N){
+  const ctx = uniformCtx, W = uniformCanvas.width, H = uniformCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  const padL=52,padR=20,padT=26,padB=45;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const val=1/N;
+  const maxY=Math.min(1, Math.max(0.12, val*1.25));
+
+  drawAxes(ctx,W,H,padL,padR,padT,padB,"Uniform position of first success: P(X = k)","attempt k");
+
+  const barW=Math.max(3, plotW/N*0.72);
+  for(let k=1;k<=N;k++){
+    const x=padL+(k-1)*(plotW/N);
+    const h=(val/maxY)*plotH;
+    ctx.fillStyle="#16a34a";
+    ctx.fillRect(x,H-padB-h,barW,h);
+  }
+  ctx.fillStyle="#475569";
+  ctx.font="13px Segoe UI, Arial";
+  ctx.fillText("1",padL-4,H-padB+20);
+  ctx.fillText(String(N),W-padR-25,H-padB+20);
+}
+
+function updateSeq(N,r){
+  seq.innerHTML="";
+  for(let i=0;i<N;i++){
+    const d=document.createElement("div");
+    d.className = "box " + (i<r ? "fail" : (i===r ? "next" : "future"));
+    d.textContent = i<r ? "✗" : (i===r ? "?" : "·");
+    d.title = "Position " + (i+1);
+    seq.appendChild(d);
+  }
+}
+
+function update(){
+  const N=parseInt(NInput.value,10);
+  rInput.max=N-1;
+  let r=parseInt(rInput.value,10);
+  if(r>N-1){r=N-1; rInput.value=r;}
+
+  NLabel.textContent=N;
+  rLabel.textContent=r;
+  rText.textContent=r;
+
+  const next=1/(N-r);
+  const pos=1/N;
+  nextProb.textContent=frac(1,N-r);
+  nextPercent.textContent=percent(next);
+  posProb.textContent=frac(1,N);
+  posPercent.textContent=percent(pos);
+
+  drawNext(N,r);
+  drawUniform(N);
+  updateSeq(N,r);
+}
+
+NInput.addEventListener("input", update);
+rInput.addEventListener("input", update);
+update();
+</script>
+</body>
+</html>

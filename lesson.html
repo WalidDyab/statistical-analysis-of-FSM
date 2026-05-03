@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Probability of Brute-Forcing an FSM Lock</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #5b677a;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --border: #e5e7eb;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #eef5ff 0%, var(--bg) 280px);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 44px 20px 24px;
+      text-align: center;
+    }
+
+    header .tag {
+      display: inline-block;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.08;
+      margin: 8px 0 12px;
+      letter-spacing: -0.04em;
+    }
+
+    header p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.15rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 10px 20px 60px;
+    }
+
+    section, .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 22px 0;
+      padding: clamp(20px, 3vw, 34px);
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      line-height: 1.2;
+      margin: 0 0 14px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 1.22rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    @media (max-width: 800px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .mini {
+      background: #fbfdff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .note {
+      background: var(--amber-soft);
+      border-left: 5px solid var(--amber);
+      padding: 16px 18px;
+      border-radius: 14px;
+      margin: 16px 0;
+    }
+
+    .takeaway {
+      background: var(--green-soft);
+      border-left: 5px solid var(--green);
+      padding: 16px 18px;
+      border-radius: 14px;
+      margin-top: 18px;
+      font-weight: 700;
+    }
+
+    .warning {
+      background: var(--red-soft);
+      border-left: 5px solid var(--red);
+      padding: 16px 18px;
+      border-radius: 14px;
+      margin-top: 18px;
+    }
+
+    .equation {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      font-size: 1.2rem;
+      overflow-x: auto;
+      margin: 14px 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+      margin: 5px 5px 5px 0;
+    }
+
+    .fsm-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 18px;
+      background: #f8fafc;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .state {
+      width: 105px;
+      height: 105px;
+      border-radius: 50%;
+      border: 4px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 800;
+      background: white;
+    }
+
+    .state.unlock {
+      border-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .arrow {
+      min-width: 70px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+      position: relative;
+    }
+    .arrow::after {
+      content: "→";
+      font-size: 2rem;
+      color: var(--primary);
+      display: block;
+      line-height: 1;
+    }
+
+    .attempt-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 12px 0;
+    }
+    .attempt {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      border: 2px solid var(--border);
+      background: white;
+    }
+    .attempt.fail { color: var(--red); background: #fff7f7; border-color: #fecaca; }
+    .attempt.success { color: var(--green); background: var(--green-soft); border-color: #86efac; }
+    .attempt small { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 15px;
+    }
+    @media(max-width: 800px) { .controls { grid-template-columns: 1fr; } }
+    label { font-weight: 700; color: var(--ink); }
+    input[type="range"] { width: 100%; }
+    .metric {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .metric strong {
+      display: block;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+
+    canvas {
+      width: 100%;
+      height: 280px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-top: 14px;
+    }
+
+    details {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 10px 0;
+    }
+    summary { cursor: pointer; font-weight: 800; }
+
+
+
+    .compare-card {
+      border-radius: 18px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      min-height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+    .compare-card.random {
+      background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+      border-top: 6px solid var(--primary);
+    }
+    .compare-card.systematic {
+      background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
+      border-top: 6px solid var(--green);
+    }
+    .attacker-icon { font-size: 2.2rem; margin-bottom: 6px; }
+    .mini-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .guess-chip { padding: 8px 10px; border-radius: 12px; background: #f8fafc; border: 1px solid var(--border); font-weight: 800; min-width: 48px; text-align: center; }
+    .guess-chip.repeat { background: #dbeafe; color: #1d4ed8; }
+    .guess-chip.new { background: #dcfce7; color: #15803d; }
+    .formula-good { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 14px; padding: 14px; margin-top: 12px; text-align: center; overflow-x: auto; }
+    .comparison-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; margin: 18px 0; border: 1px solid var(--border); }
+    .comparison-table th, .comparison-table td { padding: 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .comparison-table th { background: #f1f5f9; color: #334155; }
+    .comparison-table tr:last-child td { border-bottom: none; }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 24px;
+      font-size: 0.95rem;
+    }
+  
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-brand {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #0f172a;
+  text-decoration: none;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.nav-link {
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.nav-link:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+.hamburger {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    flex-direction: column;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  }
+  .nav-links.active {
+    display: flex;
+  }
+  .nav-link {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.5rem;
+  }
+  .hamburger {
+    display: block;
+  }
+}
+
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">FSM Statistics</a>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle Navigation">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="problem.html" class="nav-link">Problem</a>
+    <a href="lesson.html" class="nav-link">Lesson</a>
+    <a href="demo.html" class="nav-link">Interactive Demo</a>
+    <a href="visual.html" class="nav-link">Visual Summary</a>
+    <a href="quiz.html" class="nav-link">Quiz</a>
+  </div>
+</nav>
+
+<script>
+  function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+  }
+
+  document.addEventListener('click', function(event) {
+    const nav = document.querySelector('.navbar');
+    const navLinks = document.getElementById('navLinks');
+    if (nav && navLinks && !nav.contains(event.target) && navLinks.classList.contains('active')) {
+      navLinks.classList.remove('active');
+    }
+  });
+</script>
+
+  <header>
+    <div class="tag">FSM + Statistics Lecture</div>
+    <h1>Why Brute-Forcing an FSM Lock Follows a Geometric Distribution</h1>
+    <p>A step-by-step lesson for connecting your FSM knowledge to probability and statistics through brute-force unlocking attempts.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Learning target</h2>
+      <p>By the end of this lesson, you should be able to explain why random brute-force attempts are modeled using a geometric distribution, not just use the formula.</p>
+      <div class="grid grid-3">
+        <div class="mini"><h3>Recognize</h3><p>One random attempt is a success/failure experiment.</p></div>
+        <div class="mini"><h3>Derive</h3><p>Build \(P(X=k)\) from repeated failures followed by one success.</p></div>
+        <div class="mini"><h3>Interpret</h3><p>Connect \(p\), \(E[X]\), and FSM design choices.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>1. Start from what you already know: the FSM is deterministic</h2>
+      <p>An FSM lock moves through states according to the input sequence. If the correct sequence is entered, it reaches the unlock state. If a wrong input is entered, it may reset or move to another state.</p>
+
+      <div class="fsm-wrap" aria-label="Simple FSM visual">
+        <div class="state">Locked<br/>S0</div>
+        <div class="arrow">correct input 1</div>
+        <div class="state">S1</div>
+        <div class="arrow">correct input 2</div>
+        <div class="state unlock">Unlock</div>
+      </div>
+
+      <div class="note">
+        <strong>Key idea:</strong> The FSM itself is not random. For a given current state and a given input, the next state is fixed.
+      </div>
+
+      <div class="takeaway">Randomness enters only when the input attempts are random.</div>
+    </section>
+
+    <section>
+      <h2>2. One brute-force attempt has only two outcomes</h2>
+      <p>When someone tries one complete sequence randomly, one of two things happens:</p>
+      <div class="grid grid-2">
+        <div class="mini">
+          <h3>Failure</h3>
+          <p>The guessed sequence is wrong, and the lock remains locked.</p>
+          <div class="equation">\(P(\text{failure}) = 1-p\)</div>
+        </div>
+        <div class="mini">
+          <h3>Success</h3>
+          <p>The guessed sequence is correct, and the FSM reaches the unlock state.</p>
+          <div class="equation">\(P(\text{success}) = p\)</div>
+        </div>
+      </div>
+      <p>This is exactly a <strong>Bernoulli trial</strong>: one trial with success or failure.</p>
+    </section>
+
+    <section>
+      <h2>3. Define the random variable</h2>
+      <p>Now we define:</p>
+      <div class="equation">\(X = \text{number of attempts until the first unlock}\)</div>
+      <p>Why is \(X\) random? Because we do not know which random attempt will be the correct one.</p>
+      <div class="attempt-row">
+        <div class="attempt fail">✗<small>1</small></div>
+        <div class="attempt fail">✗<small>2</small></div>
+        <div class="attempt fail">✗<small>3</small></div>
+        <div class="attempt success">✓<small>4</small></div>
+      </div>
+      <p>In this example, the first success happens on attempt 4, so \(X=4\).</p>
+    </section>
+
+    <section>
+      <h2>4. Derive the distribution — do not just announce it</h2>
+      <p>Let us build the probability step by step instead of memorizing the formula.</p>
+
+      <div class="grid grid-3">
+        <div class="mini">
+          <h3>Unlock on attempt 1</h3>
+          <p>Success immediately.</p>
+          <div class="equation">\(P(X=1)=p\)</div>
+        </div>
+        <div class="mini">
+          <h3>Unlock on attempt 2</h3>
+          <p>Fail once, then succeed.</p>
+          <div class="equation">\(P(X=2)=(1-p)p\)</div>
+        </div>
+        <div class="mini">
+          <h3>Unlock on attempt 3</h3>
+          <p>Fail twice, then succeed.</p>
+          <div class="equation">\(P(X=3)=(1-p)^2p\)</div>
+        </div>
+      </div>
+
+      <p>The pattern is now visible:</p>
+      <div class="equation">\(P(X=k)=(1-p)^{k-1}p\)</div>
+      <div class="takeaway">This is the geometric distribution: repeated independent attempts until the first success.</div>
+    </section>
+
+    <section>
+      <h2>5. Why this must be geometric</h2>
+      <p>The brute-force process has the three defining properties of a geometric distribution:</p>
+      <div class="grid grid-3">
+        <div class="mini"><span class="pill">1</span><h3>Repeated trials</h3><p>The attacker keeps trying complete sequences.</p></div>
+        <div class="mini"><span class="pill">2</span><h3>Constant success probability</h3><p>Each random attempt has the same probability \(p\) of success.</p></div>
+        <div class="mini"><span class="pill">3</span><h3>Stop at first success</h3><p>Once the lock opens, the brute-force process ends.</p></div>
+      </div>
+      <div class="takeaway">Geometric distribution = waiting time until first success.</div>
+      <p>So the distribution is not chosen arbitrarily. It comes directly from the structure of the experiment.</p>
+    </section>
+
+    <section>
+      <h2>6. Connect \(p\) to the FSM design</h2>
+      <p>If each FSM step accepts an \(n\)-bit input, then each step has \(2^n\) possible input values. If the unlock sequence has length \(L\), the number of possible sequences is:</p>
+      <div class="equation">\(N=(2^n)^L=2^{nL}\)</div>
+      <p>If only one sequence unlocks the FSM, then:</p>
+      <div class="equation">\(p=\frac{1}{N}=\frac{1}{2^{nL}}\)</div>
+      <p>Therefore, the expected number of attempts is:</p>
+      <div class="equation">\(E[X]=\frac{1}{p}=2^{nL}\)</div>
+      <div class="takeaway">More bits or more steps can make brute-forcing exponentially harder.</div>
+    </section>
+
+    <section>
+      <h2>7. Interactive exploration</h2>
+      <p>Move the sliders to see how FSM design affects brute-force probability and expected attempts.</p>
+
+      <div class="controls">
+        <div class="mini">
+          <label for="bits">Input bits per step: <span id="bitsVal">2</span></label>
+          <input id="bits" type="range" min="1" max="8" value="2" />
+        </div>
+        <div class="mini">
+          <label for="steps">Sequence length: <span id="stepsVal">3</span></label>
+          <input id="steps" type="range" min="1" max="8" value="3" />
+        </div>
+        <div class="mini">
+          <label for="maxK">Show attempts up to: <span id="maxKVal">80</span></label>
+          <input id="maxK" type="range" min="20" max="300" value="80" step="10" />
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: 18px;">
+        <div class="metric">Total combinations <strong id="Nval">64</strong></div>
+        <div class="metric">Success probability <strong id="pval">1/64</strong></div>
+        <div class="metric">Expected attempts <strong id="Eval">64</strong></div>
+      </div>
+
+      <canvas id="pmfCanvas" width="900" height="310" aria-label="Geometric distribution graph"></canvas>
+      <p style="color:var(--muted);">The graph shows \(P(X=k)\) for the case where each attempt is independent and previous failed guesses may be repeated. Notice the long tail: early success is possible, but very late success is also possible.</p>
+      <div class="warning">
+        Important: this geometric graph assumes <strong>no memory of failed guesses</strong>. If the attacker keeps a list and never repeats a failed sequence, the model changes.
+      </div>
+    </section>
+
+
+    <section>
+      <h2>8. The memoryless idea: when is the geometric model valid?</h2>
+      <p>Think about this question:</p>
+      <div class="equation">\(\text{If you already failed 10 times, are you closer to success?}\)</div>
+      <p>The answer depends on the brute-force strategy.</p>
+
+      <div class="grid grid-2">
+        <div class="compare-card random">
+          <div class="attacker-icon">🎲</div>
+          <h3>Case A: random guessing with possible repetition</h3>
+          <p>If every attempt is a fresh random guess, previous failures do not change the probability of the next attempt. A wrong guess may be tried again later.</p>
+          <div class="mini-flow" aria-label="Random attacker may repeat guesses">
+            <span class="guess-chip">A</span><span>→</span><span class="guess-chip">B</span><span>→</span><span class="guess-chip repeat">A</span><span>→</span><span class="guess-chip">D</span>
+          </div>
+          <div class="formula-good">\(P(\text{success next})=p\)</div>
+          <p>This is the <strong>geometric model</strong>.</p>
+        </div>
+
+        <div class="compare-card systematic">
+          <div class="attacker-icon">🧠</div>
+          <h3>Case B: systematic guessing with memory</h3>
+          <p>If every failed sequence is removed from the list, the probability of success increases after each failure. A wrong guess is never repeated.</p>
+          <div class="mini-flow" aria-label="Systematic attacker does not repeat guesses">
+            <span class="guess-chip new">A</span><span>→</span><span class="guess-chip new">B</span><span>→</span><span class="guess-chip new">C</span><span>→</span><span class="guess-chip new">D</span>
+          </div>
+          <div class="formula-good">\(P(\text{success next after }r\text{ failures})=\frac{1}{N-r}\)</div>
+          <p>This is <strong>not geometric</strong>.</p>
+        </div>
+      </div>
+
+      <div class="warning">
+        The geometric distribution applies only when attempts are independent and the success probability remains constant. If the attacker has memory and never repeats guesses, the success probability changes from one trial to the next.
+      </div>
+    </section>
+
+    <section>
+      <h2>9. Visual comparison: random attacker vs systematic attacker</h2>
+      <p>Suppose there are \(N\) possible sequences and exactly one sequence unlocks the FSM. The distribution of \(X\) depends on how the attempts are generated.</p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr><th>Attack model</th><th>What happens?</th><th>Distribution of \(X\)</th><th>Expected attempts</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Random guessing<br/>(no memory / with replacement)</strong></td>
+            <td>Guesses are independent. Failed guesses may be repeated.</td>
+            <td>\(P(X=k)=\left(1-\frac{1}{N}\right)^{k-1}\frac{1}{N}\)</td>
+            <td>\(E[X]=N\)</td>
+          </tr>
+          <tr>
+            <td><strong>Systematic guessing<br/>(with memory / without replacement)</strong></td>
+            <td>Failed guesses are remembered and removed from the list.</td>
+            <td>\(P(X=k)=\frac{1}{N},\quad k=1,2,3,\ldots,N\)</td>
+            <td>\(E[X]=\frac{N+1}{2}\)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="grid grid-2">
+        <div class="mini">
+          <h3>Why the first curve decreases</h3>
+          <p>To succeed on attempt \(k\), the attacker must fail \(k-1\) times first. Each extra required failure multiplies the probability by a number smaller than 1.</p>
+          <div class="formula-good">\(P(X=k)=\left(1-\frac{1}{N}\right)^{k-1}\frac{1}{N}\)</div>
+        </div>
+        <div class="mini">
+          <h3>Why the second distribution is flat</h3>
+          <p>If the attacker tries every sequence exactly once in random order, the correct sequence is equally likely to be in position 1, 2, 3, ..., or \(N\).</p>
+          <div class="formula-good">\(P(X=k)=\frac{1}{N}\)</div>
+        </div>
+      </div>
+
+      <canvas id="compareCanvas" width="900" height="310" aria-label="Comparison of geometric and uniform models"></canvas>
+
+      <div class="grid grid-2" style="margin-top: 18px;">
+        <div class="metric">Random attacker average <strong id="geoAvg">64</strong></div>
+        <div class="metric">Systematic attacker average <strong id="uniAvg">32.5</strong></div>
+      </div>
+
+      <div class="takeaway">
+        The distribution is determined by the guessing strategy. Random guessing with possible repetition gives a geometric distribution. Systematic brute force without repetition gives a uniform waiting position from 1 to \(N\).
+      </div>
+    </section>
+
+    <section>
+      <h2>10. When would it NOT be geometric?</h2>
+      <p>This model depends on assumptions. It would not be geometric if:</p>
+      <div class="grid grid-3">
+        <div class="mini"><h3>No replacement</h3><p>The attacker never repeats a previous guess, so \(p\) changes over time.</p></div>
+        <div class="mini"><h3>Learning attacker</h3><p>The attacker learns from previous failures and improves guesses.</p></div>
+        <div class="mini"><h3>System lockout</h3><p>The lock blocks attempts after a fixed number of failures.</p></div>
+      </div>
+      <div class="takeaway">The distribution follows the assumptions. Change the assumptions, and the distribution may change.</div>
+    </section>
+
+    <section>
+      <h2>11. Check your understanding</h2>
+
+      <details open>
+        <summary>Q1. Why is the FSM deterministic but the brute-force analysis statistical?</summary>
+        <p>The FSM transition is fixed for each input, but the input attempts are random. Therefore, the number of attempts until unlock is random.</p>
+      </details>
+
+      <details>
+        <summary>Q2. What is the random variable \(X\)?</summary>
+        <p>\(X\) is the number of complete attempts needed until the first successful unlock.</p>
+      </details>
+
+      <details>
+        <summary>Q3. If there are 64 possible sequences, what is \(p\)?</summary>
+        <p>\(p=1/64\).</p>
+      </details>
+
+      <details>
+        <summary>Q4. If \(p=1/64\), what is the expected number of attempts?</summary>
+        <p>\(E[X]=1/p=64\). This is a long-run average, not a guarantee.</p>
+      </details>
+
+      <details>
+        <summary>Q5. What does \(P(X=5)\) mean?</summary>
+        <p>It means the probability that the first successful unlock occurs exactly on the fifth attempt: four failures followed by one success.</p>
+        <div class="equation">\(P(X=5)=(1-p)^4p\)</div>
+      </details>
+
+      <details>
+        <summary>Q6. Why is the formula \((1-p)^{k-1}p\)?</summary>
+        <p>To unlock on attempt \(k\), the first \(k-1\) attempts must fail, and the \(k\)-th attempt must succeed.</p>
+      </details>
+
+      <details>
+        <summary>Q7. If the attacker never repeats failed guesses, is \(X\) still geometric?</summary>
+        <p>No. The geometric model requires a constant success probability. Without repeated guesses, after \(r\) failures the probability becomes \(1/(N-r)\), so it changes after each attempt. In that case, the correct sequence is equally likely to appear at any position from 1 to \(N\), so \(P(X=k)=1/N\).</p>
+      </details>
+
+      <details>
+        <summary>Q11. What is the most important assumption?</summary>
+        <p>Each attempt is independent and has the same probability of success \(p\).</p>
+      </details>
+
+      <details>
+        <summary>Q11. What if the attacker never repeats a wrong guess?</summary>
+        <p>Then the success probability changes after each failure, so the geometric model no longer applies exactly.</p>
+      </details>
+    </section>
+
+
+
+    <section>
+      <h2>12. Local probability vs overall probability: what matters in engineering?</h2>
+      <p>In the learning intruder case, two probabilities answer two different engineering questions.</p>
+      <div class="grid grid-2">
+        <div class="mini">
+          <h3>Local view: what happens next?</h3>
+          <p>After \(r\) failed non-repeated guesses, the remaining search space is smaller, so the probability of success on the next attempt increases.</p>
+          <div class="equation">\(P(\text{success next}\mid r\text{ failures})=\frac{1}{N-r}\)</div>
+          <p>This is useful during operation: should the attacker continue, stop, or change strategy?</p>
+        </div>
+        <div class="mini">
+          <h3>Overall view: when will success happen?</h3>
+          <p>Before the process starts, the correct sequence is equally likely to be in any position in the non-repeated search order.</p>
+          <div class="equation">\(P(X=k)=\frac{1}{N},\quad k=1,2,\ldots,N\)</div>
+          <p>This is useful for engineering analysis: expected attempts, risk, security comparison, and design decisions.</p>
+        </div>
+      </div>
+      <div class="takeaway">One probability tells us what happens next. The other describes the whole process. Engineers usually need the overall distribution to compare designs.</div>
+    </section>
+
+    <section>
+      <h2>Final message</h2>
+      <div class="takeaway">
+        FSM design tells us how the lock behaves. Statistics tells us what to expect when the inputs are random.
+      </div>
+      <p>In engineering, many systems are deterministic in structure but statistical in operation because users, noise, faults, attacks, and environments are uncertain.</p>
+    </section>
+
+    <p class="footer-note">Light-theme lesson page: probability of brute-forcing an FSM lock.</p>
+  </main>
+
+  <script>
+    const bits = document.getElementById('bits');
+    const steps = document.getElementById('steps');
+    const maxK = document.getElementById('maxK');
+    const bitsVal = document.getElementById('bitsVal');
+    const stepsVal = document.getElementById('stepsVal');
+    const maxKVal = document.getElementById('maxKVal');
+    const Nval = document.getElementById('Nval');
+    const pval = document.getElementById('pval');
+    const Eval = document.getElementById('Eval');
+    const canvas = document.getElementById('pmfCanvas');
+    const ctx = canvas.getContext('2d');
+    const compareCanvas = document.getElementById('compareCanvas');
+    const compareCtx = compareCanvas.getContext('2d');
+    const geoAvg = document.getElementById('geoAvg');
+    const uniAvg = document.getElementById('uniAvg');
+
+    function niceInt(num) {
+      return num.toLocaleString('en-US');
+    }
+
+    function update() {
+      const n = parseInt(bits.value, 10);
+      const L = parseInt(steps.value, 10);
+      const kMax = parseInt(maxK.value, 10);
+      const N = Math.pow(2, n * L);
+      const p = 1 / N;
+
+      bitsVal.textContent = n;
+      stepsVal.textContent = L;
+      maxKVal.textContent = kMax;
+      Nval.textContent = niceInt(N);
+      pval.textContent = `1/${niceInt(N)}`;
+      Eval.textContent = niceInt(N);
+      drawPMF(p, kMax, N);
+      drawComparison(N, kMax);
+    }
+
+    function drawPMF(p, kMax, N) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const W = canvas.width;
+      const H = canvas.height;
+      const padL = 62;
+      const padR = 20;
+      const padT = 24;
+      const padB = 48;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      const values = [];
+      for (let k = 1; k <= kMax; k++) {
+        values.push(Math.pow(1 - p, k - 1) * p);
+      }
+      const maxY = Math.max(...values);
+
+      // axes
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, H - padB);
+      ctx.lineTo(W - padR, H - padB);
+      ctx.stroke();
+
+      // labels
+      ctx.fillStyle = '#475569';
+      ctx.font = '15px Segoe UI, Arial';
+      ctx.fillText('Probability', 8, padT + 12);
+      ctx.fillText('Attempt number k', W / 2 - 52, H - 12);
+      ctx.fillText('1', padL - 5, H - padB + 22);
+      ctx.fillText(String(kMax), W - padR - 28, H - padB + 22);
+
+      // bars
+      const barW = Math.max(1, plotW / kMax * 0.78);
+      for (let i = 0; i < values.length; i++) {
+        const x = padL + i * (plotW / kMax);
+        const h = (values[i] / maxY) * plotH;
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(x, H - padB - h, barW, h);
+      }
+
+      // expected marker if visible
+      if (N <= kMax) {
+        const xE = padL + (N - 1) * (plotW / kMax);
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(xE, padT);
+        ctx.lineTo(xE, H - padB);
+        ctx.stroke();
+        ctx.fillStyle = '#16a34a';
+        ctx.font = 'bold 15px Segoe UI, Arial';
+        ctx.fillText('E[X]', xE + 6, padT + 18);
+      }
+
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 16px Segoe UI, Arial';
+      ctx.fillText('Geometric distribution: P(X = k)', padL, 20);
+    }
+
+
+    function drawComparison(N, kMax) {
+      geoAvg.textContent = niceInt(N);
+      uniAvg.textContent = ((N + 1) / 2).toLocaleString('en-US', { maximumFractionDigits: 1 });
+
+      const W = compareCanvas.width;
+      const H = compareCanvas.height;
+      const padL = 62;
+      const padR = 20;
+      const padT = 34;
+      const padB = 48;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+      const maxShow = Math.min(kMax, N);
+      const p = 1 / N;
+
+      compareCtx.clearRect(0, 0, W, H);
+      const geoVals = [];
+      const uniVals = [];
+      for (let k = 1; k <= maxShow; k++) {
+        geoVals.push(Math.pow(1 - p, k - 1) * p);
+        uniVals.push(1 / N);
+      }
+      const maxY = Math.max(...geoVals, ...uniVals);
+
+      compareCtx.strokeStyle = '#cbd5e1';
+      compareCtx.lineWidth = 1.5;
+      compareCtx.beginPath();
+      compareCtx.moveTo(padL, padT);
+      compareCtx.lineTo(padL, H - padB);
+      compareCtx.lineTo(W - padR, H - padB);
+      compareCtx.stroke();
+
+      compareCtx.fillStyle = '#334155';
+      compareCtx.font = 'bold 16px Segoe UI, Arial';
+      compareCtx.fillText('Comparison of P(X = k)', padL, 22);
+      compareCtx.font = '15px Segoe UI, Arial';
+      compareCtx.fillText('Attempt number k', W / 2 - 52, H - 12);
+      compareCtx.fillText('Probability', 8, padT + 12);
+
+      const step = plotW / maxShow;
+      const barW = Math.max(1, step * 0.34);
+      for (let i = 0; i < maxShow; i++) {
+        const x = padL + i * step;
+        const gH = (geoVals[i] / maxY) * plotH;
+        const uH = (uniVals[i] / maxY) * plotH;
+        compareCtx.fillStyle = '#2563eb';
+        compareCtx.fillRect(x, H - padB - gH, barW, gH);
+        compareCtx.fillStyle = '#16a34a';
+        compareCtx.fillRect(x + barW + 1, H - padB - uH, barW, uH);
+      }
+
+      compareCtx.fillStyle = '#2563eb';
+      compareCtx.fillRect(W - 250, 15, 14, 14);
+      compareCtx.fillStyle = '#334155';
+      compareCtx.font = '14px Segoe UI, Arial';
+      compareCtx.fillText('Geometric: random repeats', W - 230, 27);
+      compareCtx.fillStyle = '#16a34a';
+      compareCtx.fillRect(W - 250, 38, 14, 14);
+      compareCtx.fillStyle = '#334155';
+      compareCtx.fillText('Uniform: no repeats', W - 230, 50);
+    }
+
+
+    [bits, steps, maxK].forEach(el => el.addEventListener('input', update));
+    update();
+  </script>
+</body>
+</html>
